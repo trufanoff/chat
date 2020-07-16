@@ -1,14 +1,18 @@
 package ru.gb.gui;
 
+import ru.gb.net.MessageSocketThread;
+import ru.gb.net.MessageSocketThreadListener;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-public class ClientGUI extends JFrame implements ActionListener, Thread.UncaughtExceptionHandler {
+public class ClientGUI extends JFrame implements ActionListener, Thread.UncaughtExceptionHandler, MessageSocketThreadListener {
 
     private static final int WIDTH = 400;
     private static final int HEIGHT = 300;
@@ -29,12 +33,10 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     private final JList<String> listUsers = new JList<>();
     private SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
+    private MessageSocketThread messageSocketThread;
+
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                new ClientGUI();
-            }
-        });
+        SwingUtilities.invokeLater(() -> new ClientGUI());
     }
 
     public ClientGUI() {
@@ -75,6 +77,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         messageField.addActionListener(this);
         buttonSend.addActionListener(this);
         cbAlwaysOnTop.addActionListener(this);
+        buttonLogin.addActionListener(this);
         setVisible(true);
     }
 
@@ -82,8 +85,15 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         Object src = e.getSource();
         if (src == cbAlwaysOnTop) {
             setAlwaysOnTop(cbAlwaysOnTop.isSelected());
-        } else if (src == buttonSend || src==messageField) {
+        } else if (src == buttonSend || src == messageField) {
             sendMessage(loginField.getText(), messageField.getText());
+        } else if (src == buttonLogin) {
+            try {
+                Socket socket = new Socket(ipAddressField.getText(), Integer.parseInt(portField.getText()));
+                messageSocketThread = new MessageSocketThread(this, "Client-"+loginField.getText(), socket);
+            } catch (IOException ioException) {
+                showError(ioException.getMessage());
+            }
         } else {
             throw new RuntimeException("Unsupported action: " + src);
         }
@@ -97,27 +107,41 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         showError(msg);
     }
 
-    private void sendMessage(String user, String msg) {
-        if (msg.isEmpty()){
+    public void sendMessage(String user, String msg) {
+        if (msg.isEmpty()) {
             return;
         }
         //23.06.2020 12:20:25 <Login>: сообщение
-        String msgToChat = String.format("%s <%s>: %s", sdf.format(Calendar.getInstance().getTime()), user, msg);
-        chatArea.append(msgToChat+"\n");
+        putMessageInChat(user, msg);
         messageField.setText("");
         messageField.grabFocus();
-        putIntoFileHistory(user, msgToChat);
+        messageSocketThread.sendMessage(msg);
+    }
+
+    public void putMessageInChat(String user, String msg) {
+        String messageToChat = String.format("%s <%s>: %s%n", sdf.format(Calendar.getInstance().getTime()), user, msg);
+        chatArea.append(messageToChat);
+        putIntoFileHistory(user, messageToChat);
     }
 
     public void putIntoFileHistory(String user, String msg) {
-        try(PrintWriter pw = new PrintWriter(new FileOutputStream(user+"-history.txt",true))){
+        try (PrintWriter pw = new PrintWriter(new FileOutputStream(user + "-history.txt", true))) {
             pw.println(msg);
         } catch (FileNotFoundException e) {
             showError(msg);
         }
     }
 
-    public void showError(String errorMsg){
+    public void showError(String errorMsg) {
         JOptionPane.showMessageDialog(this, errorMsg, "Exception!!!", JOptionPane.ERROR_MESSAGE);
+    }
+
+    public void onMessageReceived(String msg) {
+        putMessageInChat("server", msg);
+    }
+
+    @Override
+    public void onException(Throwable throwable) {
+        showError(throwable.getMessage());
     }
 }

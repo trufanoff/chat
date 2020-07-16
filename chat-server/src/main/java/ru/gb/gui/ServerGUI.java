@@ -18,7 +18,7 @@ public class ServerGUI extends JFrame implements ActionListener, Thread.Uncaught
     private final JButton buttonStop = new JButton("Stop");
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new ServerGUI());
+        SwingUtilities.invokeLater(ServerGUI::new);
     }
 
     public ServerGUI() {
@@ -39,10 +39,9 @@ public class ServerGUI extends JFrame implements ActionListener, Thread.Uncaught
     public void actionPerformed(ActionEvent e) {
         Object src = e.getSource();
         if (src == buttonStart) {
-            chatServer.start(4141);
+            chatServer.start(8181);
         } else if (src == buttonStop) {
             chatServer.stop();
-            throw new RuntimeException("Unsupported action: " + src);
         } else {
             throw new RuntimeException("Unsupported action: " + src);
         }
