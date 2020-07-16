@@ -7,6 +7,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
@@ -34,6 +36,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     private SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
     private MessageSocketThread messageSocketThread;
+    private Socket socket;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new ClientGUI());
@@ -78,6 +81,15 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         buttonSend.addActionListener(this);
         cbAlwaysOnTop.addActionListener(this);
         buttonLogin.addActionListener(this);
+        buttonDisconnect.addActionListener(this);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+                System.out.println("the end");
+                messageSocketThread.disconnect();
+            }
+        });
         setVisible(true);
     }
 
@@ -89,11 +101,13 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
             sendMessage(loginField.getText(), messageField.getText());
         } else if (src == buttonLogin) {
             try {
-                Socket socket = new Socket(ipAddressField.getText(), Integer.parseInt(portField.getText()));
-                messageSocketThread = new MessageSocketThread(this, "Client-"+loginField.getText(), socket);
+                socket = new Socket(ipAddressField.getText(), Integer.parseInt(portField.getText()));
+                messageSocketThread = new MessageSocketThread(this, "Client-" + loginField.getText(), socket);
             } catch (IOException ioException) {
                 showError(ioException.getMessage());
             }
+        } else if (src == buttonDisconnect) {
+            messageSocketThread.disconnect();
         } else {
             throw new RuntimeException("Unsupported action: " + src);
         }
