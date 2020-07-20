@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ru.gb.gui.fx.Controller"
+            prefHeight="400.0" prefWidth="600.0">
+
+    <Button text="Start" onAction="#start"
+            GridPane.columnIndex="0" GridPane.hgrow="ALWAYS" maxWidth="Infinity"/>
+
+    <Button text="Stop" onAction="#stop"
+            GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" maxWidth="Infinity"/>
+
+    <Button text="Disconnect all" onAction="#disconnectAll"
+            GridPane.columnIndex="2" GridPane.hgrow="ALWAYS" maxWidth="Infinity"/>
+
+    <TextArea fx:id="logArea"
+            GridPane.rowIndex="1" GridPane.columnSpan="3" GridPane.vgrow="ALWAYS"/>
+
+
+</GridPane>

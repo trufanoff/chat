@@ -3,6 +3,7 @@ package ru.gb.net;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 public class ServerSocketThread extends Thread {
     private final int port;
@@ -26,7 +27,7 @@ public class ServerSocketThread extends Thread {
                     System.out.println("Waiting for connect");
                     Socket socket = serverSocket.accept();
                     listener.onSocketAccepted(socket);
-                } catch (IOException e){
+                } catch (SocketTimeoutException e){
                     listener.onClientTimeout(e);
                     continue;
                 }

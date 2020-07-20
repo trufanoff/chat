@@ -1,5 +1,6 @@
 package ru.gb.gui;
 
+import ru.gb.chat.common.MessageLibrary;
 import ru.gb.net.MessageSocketThread;
 import ru.gb.net.MessageSocketThreadListener;
 
@@ -73,11 +74,13 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         add(scrollPaneUsers, BorderLayout.EAST);
         add(panelTop, BorderLayout.NORTH);
         add(panelBottom, BorderLayout.SOUTH);
+        panelBottom.setVisible(false);
 
         messageField.addActionListener(this);
         buttonSend.addActionListener(this);
         cbAlwaysOnTop.addActionListener(this);
         buttonLogin.addActionListener(this);
+        buttonDisconnect.addActionListener(this);
         setVisible(true);
     }
 
@@ -94,7 +97,10 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
             } catch (IOException ioException) {
                 showError(ioException.getMessage());
             }
-        } else {
+        } else if (src == buttonDisconnect){
+            onSocketClosed();
+            messageSocketThread.close();
+        } else{
             throw new RuntimeException("Unsupported action: " + src);
         }
     }
@@ -143,5 +149,19 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     @Override
     public void onException(Throwable throwable) {
         showError(throwable.getMessage());
+    }
+
+    @Override
+    public void onSockedReady() {
+        panelTop.setVisible(false);
+        panelBottom.setVisible(true);
+        System.out.println(loginField.getText()+" "+(new String(passwordField.getPassword())));
+        messageSocketThread.sendMessage(MessageLibrary.getAuthRequestMessage(loginField.getText(), new String(passwordField.getPassword())));
+    }
+
+    @Override
+    public void onSocketClosed() {
+        panelTop.setVisible(true);
+        panelBottom.setVisible(false);
     }
 }
