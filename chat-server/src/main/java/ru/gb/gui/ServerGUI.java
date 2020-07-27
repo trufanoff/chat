@@ -48,6 +48,7 @@ public class ServerGUI extends JFrame implements ActionListener, Thread.Uncaught
         }
     }
 
+    //обработчик исключений
     public void uncaughtException(Thread t, Throwable e) {
         e.printStackTrace();
         StackTraceElement[] ste = e.getStackTrace();

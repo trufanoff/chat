@@ -10,6 +10,7 @@ public class ClientSessionThread extends MessageSocketThread {
 
     private boolean isAuthorized = false;
     private String nickname;
+    private boolean reconnected = false;
 
     public ClientSessionThread(MessageSocketThreadListener listener, String name, Socket socket) {
         super(listener, name, socket);
@@ -37,5 +38,13 @@ public class ClientSessionThread extends MessageSocketThread {
     public void authError(String msg){
         sendMessage(MessageLibrary.getMsgFormatErrorMessage(msg));
         close();
+    }
+
+    public boolean isReconnected() {
+        return reconnected;
+    }
+
+    public void setReconnected(boolean reconnected) {
+        this.reconnected = reconnected;
     }
 }

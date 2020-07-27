@@ -11,6 +11,7 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 
 public class ClientGUI extends JFrame implements ActionListener, Thread.UncaughtExceptionHandler, MessageSocketThreadListener {
@@ -33,24 +34,20 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     private final JButton buttonSend = new JButton("Send");
     private final JList<String> listUsers = new JList<>();
     private SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-
+    private static final String WINDOW_TITLE = "Chat Client";
     private MessageSocketThread messageSocketThread;
+    private String nickname;
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new ClientGUI());
+        SwingUtilities.invokeLater(ClientGUI::new);
     }
 
     public ClientGUI() {
         Thread.setDefaultUncaughtExceptionHandler(this);
         setSize(WIDTH, HEIGHT);
-        setTitle("Chat");
+        setTitle(WINDOW_TITLE);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setAlwaysOnTop(true);
-
-        listUsers.setListData(new String[]{
-                "user1", "user2", "user3", "user4", "user5", "user6", "user7",
-                "user8", "user9", "user-with-too-long-name-in-this-chat"
-        });
 
         JScrollPane scrollPaneUsers = new JScrollPane(listUsers);
         JScrollPane scrollPaneChatArea = new JScrollPane(chatArea);
@@ -89,18 +86,18 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         if (src == cbAlwaysOnTop) {
             setAlwaysOnTop(cbAlwaysOnTop.isSelected());
         } else if (src == buttonSend || src == messageField) {
-            sendMessage(loginField.getText(), messageField.getText());
+            sendMessage(messageField.getText());
         } else if (src == buttonLogin) {
             try {
                 Socket socket = new Socket(ipAddressField.getText(), Integer.parseInt(portField.getText()));
-                messageSocketThread = new MessageSocketThread(this, "Client-"+loginField.getText(), socket);
+                messageSocketThread = new MessageSocketThread(this, "Client-" + loginField.getText(), socket);
             } catch (IOException ioException) {
                 showError(ioException.getMessage());
             }
-        } else if (src == buttonDisconnect){
-            onSocketClosed();
+        } else if (src == buttonDisconnect) {
+            onSocketClosed(messageSocketThread);
             messageSocketThread.close();
-        } else{
+        } else {
             throw new RuntimeException("Unsupported action: " + src);
         }
     }
@@ -113,15 +110,15 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         showError(msg);
     }
 
-    public void sendMessage(String user, String msg) {
+    public void sendMessage(String msg) {
         if (msg.isEmpty()) {
             return;
         }
         //23.06.2020 12:20:25 <Login>: сообщение
-        putMessageInChat(user, msg);
+        putMessageInChat(nickname, msg);
         messageField.setText("");
         messageField.grabFocus();
-        messageSocketThread.sendMessage(msg);
+        messageSocketThread.sendMessage(MessageLibrary.getTypeBroadcastClient(nickname, msg));
     }
 
     public void putMessageInChat(String user, String msg) {
@@ -142,26 +139,67 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         JOptionPane.showMessageDialog(this, errorMsg, "Exception!!!", JOptionPane.ERROR_MESSAGE);
     }
 
-    public void onMessageReceived(String msg) {
-        putMessageInChat("server", msg);
+
+    @Override
+    public void onMessageReceived(MessageSocketThread thread, String msg) {
+        handleMessage(msg);
     }
 
     @Override
-    public void onException(Throwable throwable) {
+    public void onException(MessageSocketThread thread, Throwable throwable) {
         showError(throwable.getMessage());
     }
 
     @Override
-    public void onSockedReady() {
+    public void onSockedReady(MessageSocketThread thread) {
         panelTop.setVisible(false);
         panelBottom.setVisible(true);
-        System.out.println(loginField.getText()+" "+(new String(passwordField.getPassword())));
+        System.out.println("login: " + loginField.getText() + " password: " + (new String(passwordField.getPassword())));
         messageSocketThread.sendMessage(MessageLibrary.getAuthRequestMessage(loginField.getText(), new String(passwordField.getPassword())));
     }
 
     @Override
-    public void onSocketClosed() {
+    public void onSocketClosed(MessageSocketThread thread) {
         panelTop.setVisible(true);
         panelBottom.setVisible(false);
+        setTitle(WINDOW_TITLE);
+        listUsers.setListData(new String[0]);
+    }
+
+    private void handleMessage(String msg) {
+        String[] values = msg.split(MessageLibrary.DELIMITER);
+        switch (MessageLibrary.getMessageType(msg)) {
+            case AUTH_ACCEPT:
+                this.nickname = values[2];
+                setTitle(WINDOW_TITLE + ": " + this.nickname);
+                break;
+            case AUTH_DENIED:
+                putMessageInChat("server", msg);
+                messageSocketThread.close();
+                break;
+            case TYPE_BROADCAST:
+                putMessageInChat(values[2], values[3]);
+                break;
+            case MSG_FORMAT_ERROR:
+                putMessageInChat("server", msg);
+                break;
+            case USER_LIST:
+                // /user_list##user1##user2##user3
+                String users = msg.substring(MessageLibrary.USER_LIST.length() + MessageLibrary.DELIMITER.length());
+                // user1##user2##user3
+                String[] userArray = users.split(MessageLibrary.DELIMITER);
+                Arrays.sort(userArray);
+                listUsers.setListData(userArray);
+                break;
+            case TYPE_BROADCAST_CLIENT:
+                String srcNickname = values[1];
+                if (srcNickname.equals(nickname)) {
+                    return;
+                }
+                putMessageInChat(srcNickname, values[2]);
+                break;
+            default:
+                throw new RuntimeException("Unknown message: " + msg);
+        }
     }
 }
