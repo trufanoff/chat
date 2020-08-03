@@ -32,7 +32,7 @@ public class ServerSocketThread extends Thread {
                     System.out.println("Waiting for connect");
                     Socket socket = serverSocket.accept();
 
-                    //передача сокета для создания клиент сессии
+                    /*  передача сокета (классу который реализует интерфейс ServerSocketThreadListener СhatServer) для создания клиент сессии */
                     listener.onSocketAccepted(socket);
                 } catch (SocketTimeoutException e) {
                     listener.onClientTimeout(e);
