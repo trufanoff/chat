@@ -11,8 +11,11 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ClientGUI extends JFrame implements ActionListener, Thread.UncaughtExceptionHandler, MessageSocketThreadListener {
 
@@ -134,9 +137,22 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     /*  сохранение истории сообщений для клиента    */
     public void putIntoFileHistory(String user, String msg) {
         try (PrintWriter pw = new PrintWriter(new FileOutputStream(user + "-history.txt", true))) {
-            pw.println(msg);
+            pw.print(msg);
         } catch (FileNotFoundException e) {
             showError(msg);
+        }
+    }
+
+    public void getUserHistory(String user){
+        try (BufferedReader reader = new BufferedReader(new FileReader(user + "-history.txt"))) {
+            String line;
+            int counter = 0;
+            while((line=reader.readLine())!=null && counter<=100){
+                chatArea.append(String.format("%s%n",line));
+                counter++;
+            }
+        } catch (Exception e){
+            e.printStackTrace();
         }
     }
 
@@ -181,6 +197,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
 
                 /*  если авторизация прошла успешно, вывести никнейм клиента в названии окна */
                 setTitle(WINDOW_TITLE + ": " + this.nickname);
+                getUserHistory(this.nickname);
                 break;
             case AUTH_DENIED:
                 putMessageInChat("server", msg);

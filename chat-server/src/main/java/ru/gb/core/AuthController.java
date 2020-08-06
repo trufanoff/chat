@@ -35,8 +35,8 @@ public class AuthController {
             while(resultSet.next()){
                 users.add(new User(resultSet.getString("login"), resultSet.getString("password"), resultSet.getString("nickname")));
             }
-        } catch (Exception throwables) {
-            throwables.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             disconnect();
         }
@@ -52,8 +52,8 @@ public class AuthController {
     private void disconnect() {
         try {
             connection.close();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }
