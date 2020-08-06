@@ -48,7 +48,7 @@ public class ServerGUI extends JFrame implements ActionListener, Thread.Uncaught
         }
     }
 
-    //обработчик исключений
+    /*  обработчик исключений   */
     public void uncaughtException(Thread t, Throwable e) {
         e.printStackTrace();
         StackTraceElement[] ste = e.getStackTrace();
@@ -58,6 +58,7 @@ public class ServerGUI extends JFrame implements ActionListener, Thread.Uncaught
         System.exit(1);
     }
 
+    /*  печать в консоль сообщений которые отправляет сервер после получения данных от клиента и их обработки   */
     @Override
     public void onChatServerMessage(String msg) {
         System.out.println(msg);
