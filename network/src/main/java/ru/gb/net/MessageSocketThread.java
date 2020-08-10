@@ -20,7 +20,6 @@ public class MessageSocketThread extends Thread {
         start();
     }
 
-
     @Override
     public void run() {
         try {

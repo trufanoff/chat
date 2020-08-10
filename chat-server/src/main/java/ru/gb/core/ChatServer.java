@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Vector;
 
+
 public class ChatServer implements ServerSocketThreadListener, MessageSocketThreadListener {
 
     private ServerSocketThread serverSocketThread;
@@ -41,14 +42,11 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
         disconnectAll();
     }
 
-    /*
-     * Server Socked Thread Listener methods
-     */
+    /*   Server Socked Thread Listener methods  */
     /*  создание новой клиенткой сессии и добавление ее в Vector*/
     public void onSocketAccepted(Socket socket) {
         clients.add(new ClientSessionThread(this, "ClientSessionThread", socket));
     }
-
 
     @Override
     public void onClientConnected() {
@@ -62,12 +60,9 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
 
     @Override
     public void onClientTimeout(Throwable throwable) {
-        // throw new UnsupportedOperationException();
     }
 
-    /*
-     * Message Socked Thread Listener methods
-     */
+    /*  Message Socked Thread Listener methods  */
     @Override
     public void onMessageReceived(MessageSocketThread thread, String msg) {
         ClientSessionThread clientSession = (ClientSessionThread) thread;
@@ -90,7 +85,7 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
         ClientSessionThread clientSession = (ClientSessionThread) thread;
         logMessage("Socket closed");
         clients.remove(thread);
-        if(clientSession.isAuthorized() && !clientSession.isReconnected()){
+        if (clientSession.isAuthorized() && !clientSession.isReconnected()) {
             sendToAllAuthorizedClients(MessageLibrary.getBroadcastMessage("server", "User " + clientSession.getNickname() + " disconnected."));
         }
         sendToAllAuthorizedClients(MessageLibrary.getUserList(getUsersList()));
@@ -111,6 +106,7 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
             client.sendMessage(msg);
         }
     }
+
     /*  рассылка сообщений все авторизованным пользователям     */
     private void sendToAllAuthorizedClients(String msg) {
         for (ClientSessionThread client : clients) {
@@ -162,6 +158,7 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
             clients.remove(client);
         }
     }
+
     /*  список подлюченных юзеров к чату    */
     public String getUsersList() {
         StringBuilder sb = new StringBuilder();
