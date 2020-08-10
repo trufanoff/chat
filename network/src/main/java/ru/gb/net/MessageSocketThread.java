@@ -23,11 +23,12 @@ public class MessageSocketThread extends Thread {
     @Override
     public void run() {
         try {
+            /*  создание потоков получения и отправки сообщений  */
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
-            System.out.println("MessageSocketThread before listener.onSocketReady()");
+
+            /*  сообщение классу который реализует MessageSocketThreadListener, что поток создан и запущен   */
             listener.onSockedReady(this);
-            System.out.println("MessageSocketThread after listener.onSocketReady()");
             while (!isInterrupted()) {
                 if (!isClosed) {
                     listener.onMessageReceived(this, in.readUTF());
@@ -40,7 +41,7 @@ public class MessageSocketThread extends Thread {
             close();
         }
     }
-
+    /* отправка сообщений */
     public void sendMessage(String message) {
         try {
             if (!socket.isConnected() || socket.isClosed() || isClosed) {
@@ -55,6 +56,8 @@ public class MessageSocketThread extends Thread {
         }
     }
 
+    /*  кнопка disconnect, отключения пользователя, закрытие его потока (сессии),
+        закрытие потоков для получения и отправки сообщений  */
     public synchronized void close() {
         isClosed = true;
         interrupt();

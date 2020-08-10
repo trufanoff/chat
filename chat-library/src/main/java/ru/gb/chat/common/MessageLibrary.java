@@ -33,7 +33,9 @@ public class MessageLibrary {
     /* если мы вдруг не поняли, что за сообщение и не смогли разобрать */
     public static final String MSG_FORMAT_ERROR = "/msg_format_error";
 
+    /*  сообщение от конкретного пользователя, предназначеное для остальных клиентов    */
     public static final String TYPE_BROADCAST_CLIENT = "/client_msg";
+
     public static final String USER_LIST = "/user_list";
 
     public static final String getAuthRequestMessage(String login, String password) {

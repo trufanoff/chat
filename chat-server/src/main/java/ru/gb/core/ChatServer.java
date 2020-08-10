@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Vector;
 
+
 public class ChatServer implements ServerSocketThreadListener, MessageSocketThreadListener {
 
     private ServerSocketThread serverSocketThread;
@@ -41,9 +42,8 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
         disconnectAll();
     }
 
-    /*
-     * Server Socked Thread Listener methods
-     */
+    /*   Server Socked Thread Listener methods  */
+    /*  создание новой клиенткой сессии и добавление ее в Vector*/
     public void onSocketAccepted(Socket socket) {
         clients.add(new ClientSessionThread(this, "ClientSessionThread", socket));
     }
@@ -60,12 +60,9 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
 
     @Override
     public void onClientTimeout(Throwable throwable) {
-        // throw new UnsupportedOperationException();
     }
 
-    /*
-     * Message Socked Thread Listener methods
-     */
+    /*  Message Socked Thread Listener methods  */
     @Override
     public void onMessageReceived(MessageSocketThread thread, String msg) {
         ClientSessionThread clientSession = (ClientSessionThread) thread;
@@ -80,7 +77,7 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
 
     @Override
     public void onSockedReady(MessageSocketThread thread) {
-        logMessage("Socket ready ChatServer");
+        logMessage("Socket ready");
     }
 
     @Override
@@ -88,7 +85,7 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
         ClientSessionThread clientSession = (ClientSessionThread) thread;
         logMessage("Socket closed");
         clients.remove(thread);
-        if(clientSession.isAuthorized() && !clientSession.isReconnected()){
+        if (clientSession.isAuthorized() && !clientSession.isReconnected()) {
             sendToAllAuthorizedClients(MessageLibrary.getBroadcastMessage("server", "User " + clientSession.getNickname() + " disconnected."));
         }
         sendToAllAuthorizedClients(MessageLibrary.getUserList(getUsersList()));
@@ -99,8 +96,8 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
         throwable.printStackTrace();
     }
 
+    // рассылка сообщений всем автори
     private void processAuthorizedUserMessage(String msg) {
-        System.out.println("processAuthorizedUserMessage()");
         logMessage(msg);
         for (ClientSessionThread client : clients) {
             if (!client.isAuthorized()) {
@@ -110,6 +107,7 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
         }
     }
 
+    /*  рассылка сообщений все авторизованным пользователям     */
     private void sendToAllAuthorizedClients(String msg) {
         for (ClientSessionThread client : clients) {
             if (!client.isAuthorized()) {
@@ -147,11 +145,12 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
         sendToAllAuthorizedClients(MessageLibrary.getUserList(getUsersList()));
     }
 
+    /*  печать в консоль сообщений которые отправляет сервер после получения данных от клиента и их обработки   */
     private void logMessage(String msg) {
         listener.onChatServerMessage(msg);
     }
 
-
+    /*  Отключение подключенных на данный момент пользователей   */
     public void disconnectAll() {
         ArrayList<ClientSessionThread> currentClients = new ArrayList<>(clients);
         for (ClientSessionThread client : currentClients) {
@@ -160,6 +159,7 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
         }
     }
 
+    /*  список подлюченных юзеров к чату    */
     public String getUsersList() {
         StringBuilder sb = new StringBuilder();
         for (ClientSessionThread client : clients) {
@@ -171,6 +171,7 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
         return sb.toString();
     }
 
+    /*  поиск старой сессии клиента по никнейму */
     private ClientSessionThread findClientSessionByNickname(String nickname) {
         for (ClientSessionThread client : clients) {
             if (!client.isAuthorized()) {

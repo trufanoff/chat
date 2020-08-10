@@ -11,8 +11,11 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ClientGUI extends JFrame implements ActionListener, Thread.UncaughtExceptionHandler, MessageSocketThreadListener {
 
@@ -73,11 +76,13 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         add(panelBottom, BorderLayout.SOUTH);
         panelBottom.setVisible(false);
 
-        messageField.addActionListener(this);
-        buttonSend.addActionListener(this);
         cbAlwaysOnTop.addActionListener(this);
+        messageField.addActionListener(this);
+
         buttonLogin.addActionListener(this);
+        buttonSend.addActionListener(this);
         buttonDisconnect.addActionListener(this);
+
         setVisible(true);
     }
 
@@ -110,6 +115,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         showError(msg);
     }
 
+    /*  отправка сообщения на сервер, сервер обрабатывает и рассылает всем клиентам   */
     public void sendMessage(String msg) {
         if (msg.isEmpty()) {
             return;
@@ -121,17 +127,32 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         messageSocketThread.sendMessage(MessageLibrary.getTypeBroadcastClient(nickname, msg));
     }
 
+    /*  отображение сообщения в чат арею    */
     public void putMessageInChat(String user, String msg) {
         String messageToChat = String.format("%s <%s>: %s%n", sdf.format(Calendar.getInstance().getTime()), user, msg);
         chatArea.append(messageToChat);
         putIntoFileHistory(user, messageToChat);
     }
 
+    /*  сохранение истории сообщений для клиента    */
     public void putIntoFileHistory(String user, String msg) {
         try (PrintWriter pw = new PrintWriter(new FileOutputStream(user + "-history.txt", true))) {
-            pw.println(msg);
+            pw.print(msg);
         } catch (FileNotFoundException e) {
             showError(msg);
+        }
+    }
+
+    public void getUserHistory(String user){
+        try (BufferedReader reader = new BufferedReader(new FileReader(user + "-history.txt"))) {
+            String line;
+            int counter = 0;
+            while((line=reader.readLine())!=null && counter<=100){
+                chatArea.append(String.format("%s%n",line));
+                counter++;
+            }
+        } catch (Exception e){
+            e.printStackTrace();
         }
     }
 
@@ -139,7 +160,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         JOptionPane.showMessageDialog(this, errorMsg, "Exception!!!", JOptionPane.ERROR_MESSAGE);
     }
 
-
+    /*  получаем сообщение от сервера */
     @Override
     public void onMessageReceived(MessageSocketThread thread, String msg) {
         handleMessage(msg);
@@ -154,7 +175,8 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     public void onSockedReady(MessageSocketThread thread) {
         panelTop.setVisible(false);
         panelBottom.setVisible(true);
-        System.out.println("login: " + loginField.getText() + " password: " + (new String(passwordField.getPassword())));
+
+        /*  отправка серверу данных клиента для авторизации  */
         messageSocketThread.sendMessage(MessageLibrary.getAuthRequestMessage(loginField.getText(), new String(passwordField.getPassword())));
     }
 
@@ -166,18 +188,23 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         listUsers.setListData(new String[0]);
     }
 
+    //обработка сообщений от сервера
     private void handleMessage(String msg) {
         String[] values = msg.split(MessageLibrary.DELIMITER);
         switch (MessageLibrary.getMessageType(msg)) {
             case AUTH_ACCEPT:
                 this.nickname = values[2];
+
+                /*  если авторизация прошла успешно, вывести никнейм клиента в названии окна */
                 setTitle(WINDOW_TITLE + ": " + this.nickname);
+                getUserHistory(this.nickname);
                 break;
             case AUTH_DENIED:
                 putMessageInChat("server", msg);
                 messageSocketThread.close();
                 break;
             case TYPE_BROADCAST:
+                /*  серверные сообшения всем клиентам */
                 putMessageInChat(values[2], values[3]);
                 break;
             case MSG_FORMAT_ERROR:
@@ -192,6 +219,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
                 listUsers.setListData(userArray);
                 break;
             case TYPE_BROADCAST_CLIENT:
+                /*  сообщения которые отправил какой то клиент, и его отображение всем, кроме его */
                 String srcNickname = values[1];
                 if (srcNickname.equals(nickname)) {
                     return;

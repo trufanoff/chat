@@ -4,11 +4,14 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 
 public class ServerSocketThread extends Thread {
     private final int port;
     private final int timeout;
     private ServerSocketThreadListener listener;
+    public ExecutorService executorService;
 
     /* входящие данные: класс (ChatServer) который реализует ServerSocketThreadListener,
      *                  имя,
@@ -20,6 +23,7 @@ public class ServerSocketThread extends Thread {
         this.port = port;
         this.listener = listener;
         this.timeout = timeout;
+        this.executorService = Executors.newFixedThreadPool(2);
     }
 
     @Override
@@ -32,8 +36,13 @@ public class ServerSocketThread extends Thread {
                     System.out.println("Waiting for connect");
                     Socket socket = serverSocket.accept();
 
-                    //передача сокета для создания клиент сессии
-                    listener.onSocketAccepted(socket);
+                    /*  передача сокета (классу который реализует интерфейс ServerSocketThreadListener СhatServer) для создания клиент сессии */
+                    executorService.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.onSocketAccepted(socket);
+                        }
+                    });
                 } catch (SocketTimeoutException e) {
                     listener.onClientTimeout(e);
                     continue;
