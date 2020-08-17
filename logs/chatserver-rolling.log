@@ -1,0 +1,16 @@
+2020-08-16 15:25:23,521 INFO    --- [AWT-EventQueue-0] ru.gb.core.ChatServer                    : Server started
+2020-08-16 15:25:35,806 INFO    --- [Chat-Server-Socket-Thread] ru.gb.core.ChatServer                    : Client connected
+2020-08-16 15:25:35,815 INFO    --- [ClientSessionThread] ru.gb.core.ChatServer                    : Socket ready
+2020-08-16 15:25:35,840 INFO    --- [ClientSessionThread] ru.gb.core.ChatServer                    : User def_user connected
+2020-08-16 15:26:02,103 INFO    --- [ClientSessionThread] ru.gb.core.ChatServer                    : User def_user disconnected
+2020-08-16 15:26:02,104 INFO    --- [ClientSessionThread] ru.gb.core.ChatServer                    : User def_user disconnected
+2020-08-16 15:26:10,225 INFO    --- [AWT-EventQueue-0] ru.gb.core.ChatServer                    : Server stopped
+2020-08-16 20:23:25,361 INFO    --- [AWT-EventQueue-0] ru.gb.core.ChatServer                    : Server started
+2020-08-16 20:23:36,734 INFO    --- [Chat-Server-Socket-Thread] ru.gb.core.ChatServer                    : Client connected
+2020-08-16 20:23:36,945 INFO    --- [ClientSessionThread] ru.gb.core.ChatServer                    : Socket ready
+2020-08-16 20:23:37,562 INFO    --- [ClientSessionThread] ru.gb.core.ChatServer                    : ClientSessionThread: /auth##request##login##123
+2020-08-16 20:23:37,714 INFO    --- [ClientSessionThread] ru.gb.core.ChatServer                    : User def_user connected
+2020-08-16 20:24:06,456 INFO    --- [ClientSessionThread] ru.gb.core.ChatServer                    : ClientSessionThread: /client_msg##def_user##hello
+2020-08-16 20:24:16,512 INFO    --- [ClientSessionThread] ru.gb.core.ChatServer                    : User def_user disconnected
+2020-08-16 20:24:16,536 INFO    --- [ClientSessionThread] ru.gb.core.ChatServer                    : User def_user disconnected
+2020-08-16 20:24:19,747 INFO    --- [AWT-EventQueue-0] ru.gb.core.ChatServer                    : Server stopped
