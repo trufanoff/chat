@@ -1,5 +1,7 @@
 package ru.gb.core;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.gb.chat.common.MessageLibrary;
 import ru.gb.net.MessageSocketThread;
 import ru.gb.net.MessageSocketThreadListener;
@@ -12,6 +14,7 @@ import java.util.Vector;
 
 public class ChatServer implements ServerSocketThreadListener, MessageSocketThreadListener {
 
+    private final Logger logger = LogManager.getLogger(ChatServer.class);
     private ServerSocketThread serverSocketThread;
     private ChatServerListener listener;
     private AuthController authController;
@@ -29,7 +32,7 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
         serverSocketThread.start();
         authController = new AuthController();
         authController.init();
-        System.out.println("Server started");
+        logger.info("Server started");
     }
 
     public void stop() {
@@ -37,7 +40,7 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
             return;
         }
         serverSocketThread.interrupt();
-        System.out.println("Server stopped");
+        logger.info("Server stopped");
         disconnectAll();
     }
 
@@ -50,17 +53,19 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
 
     @Override
     public void onClientConnected() {
-        logMessage("Client connected");
+        logger.info("Client connected");
+//        logMessage("Client connected");
     }
 
     @Override
     public void onException(Throwable throwable) {
         throwable.printStackTrace();
+        logger.error("Error: {}",throwable.getMessage(), throwable);
     }
 
     @Override
     public void onClientTimeout(Throwable throwable) {
-        // throw new UnsupportedOperationException();
+
     }
 
     /*
@@ -69,8 +74,9 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
     @Override
     public void onMessageReceived(MessageSocketThread thread, String msg) {
         ClientSessionThread clientSession = (ClientSessionThread) thread;
-        System.out.println("chatServer.onMessageReceived(): msg = " + msg);
-        System.out.println("isAuthorized: " + clientSession.isAuthorized());
+//        System.out.println("chatServer.onMessageReceived(): msg = " + msg);
+//        System.out.println("isAuthorized: " + clientSession.isAuthorized());
+        logger.info(clientSession.getName()+": "+msg);
         if (clientSession.isAuthorized()) {
             processAuthorizedUserMessage(msg);
         } else {
@@ -80,7 +86,8 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
 
     @Override
     public void onSockedReady(MessageSocketThread thread) {
-        logMessage("Socket ready ChatServer");
+//        logMessage("Socket ready ChatServer");
+        logger.info("Socket ready");
     }
 
     @Override
@@ -90,6 +97,7 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
         clients.remove(thread);
         if(clientSession.isAuthorized() && !clientSession.isReconnected()){
             sendToAllAuthorizedClients(MessageLibrary.getBroadcastMessage("server", "User " + clientSession.getNickname() + " disconnected."));
+            logger.info("User "+clientSession.getNickname()+" disconnected");
         }
         sendToAllAuthorizedClients(MessageLibrary.getUserList(getUsersList()));
     }
@@ -97,6 +105,7 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
     @Override
     public void onException(MessageSocketThread thread, Throwable throwable) {
         throwable.printStackTrace();
+        logger.error("Error: {}, {}",thread.getName(),throwable.getMessage(), throwable);
     }
 
     private void processAuthorizedUserMessage(String msg) {
@@ -126,6 +135,7 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
                 !arr[0].equals(MessageLibrary.AUTH_METHOD) ||
                 !arr[1].equals(MessageLibrary.AUTH_REQUEST)) {
             clientSession.authError("Incorrect request: " + msg);
+            logger.error("Incorrect request: "+msg);
             return;
         }
         String login = arr[2];
@@ -139,6 +149,7 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
             clientSession.authAccept(nickname);
             if (oldClientSession == null) {
                 sendToAllAuthorizedClients(MessageLibrary.getBroadcastMessage("server", "User " + nickname + " connected!"));
+                logger.info("User "+nickname+" connected");
             } else {
                 oldClientSession.setReconnected(true);
                 clients.remove(oldClientSession);
@@ -150,7 +161,6 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
     private void logMessage(String msg) {
         listener.onChatServerMessage(msg);
     }
-
 
     public void disconnectAll() {
         ArrayList<ClientSessionThread> currentClients = new ArrayList<>(clients);

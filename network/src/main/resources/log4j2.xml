@@ -1,0 +1,57 @@
+<Configuration>
+    <Properties>
+        <Property name="basePath">logs</Property>
+    </Properties>
+    <Appenders>
+        <Console name="stdout" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %-5level ${PID:- } --- [%t] %-40.40logger{39} : %n%m%throwable"/>
+        </Console>
+
+        <File name="MessageSocketThread-file" fileName="${basePath}/MessageSocketThread-logfile.log">
+            <PatternLayout
+                    pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %-5level ${PID:- } --- [%t] %-40.40logger{39} : %m%n%throwable"/>
+        </File>
+
+        <RollingFile name="MessageSocketThread-rollingFile" fileName="${basePath}/MessageSocketThread-rolling.log"
+                     filePattern="${basePath}/MessageSocketThread-rolling-%d{MM-dd-yy}_%i.log.gz">
+            <PatternLayout
+                    pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %-5level ${PID:- } --- [%t] %-40.40logger{39} : %m%n%throwable"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="1M"/>
+            </Policies>
+        </RollingFile>
+
+        <File name="ServerSocketThread-file" fileName="${basePath}/ServerSocketThread-logfile.log">
+            <PatternLayout
+                    pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %-5level ${PID:- } --- [%t] %-40.40logger{39} : %m%n%throwable"/>
+        </File>
+
+        <RollingFile name="ServerSocketThread-rollingFile" fileName="${basePath}/ServerSocketThread-rolling.log"
+                     filePattern="${basePath}/ServerSocketThread-rolling-%d{MM-dd-yy}_%i.log.gz">
+            <PatternLayout
+                    pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %-5level ${PID:- } --- [%t] %-40.40logger{39} : %m%n%throwable"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="1M"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+
+        <Logger name="ru.gb.net" level="DEBUG" additivity="false">
+            <AppenderRef ref="ServerSocketThread-file"/>
+            <AppenderRef ref="ServerSocketThread-rollingFile"/>
+        </Logger>
+
+        <Logger name="ru.gb.net" level="DEBUG" additivity="false">
+            <AppenderRef ref="MessageSocketThread-file"/>
+            <AppenderRef ref="MessageSocketThread-rollingFile"/>
+        </Logger>
+
+        <Root level="INFO" additivity="true">
+            <AppenderRef ref="stdout"/>
+        </Root>
+
+    </Loggers>
+</Configuration>

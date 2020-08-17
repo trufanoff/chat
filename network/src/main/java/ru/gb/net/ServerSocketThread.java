@@ -1,11 +1,16 @@
 package ru.gb.net;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 
 public class ServerSocketThread extends Thread {
+
+    private final Logger logger = LogManager.getLogger(ServerSocketThread.class);
     private final int port;
     private final int timeout;
     private ServerSocketThreadListener listener;
@@ -26,6 +31,7 @@ public class ServerSocketThread extends Thread {
     public void run() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println(getName() + " running on port: " + port);
+            logger.info(getName()+" running on port "+port);
             serverSocket.setSoTimeout(timeout);
             while (!isInterrupted()) {
                 try {
@@ -43,6 +49,7 @@ public class ServerSocketThread extends Thread {
             }
         } catch (IOException e) {
             listener.onException(e);
+            logger.error("Error {}",e.getMessage(),e);
         }
     }
 }

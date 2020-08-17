@@ -1,5 +1,8 @@
 package ru.gb.net;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -7,6 +10,7 @@ import java.net.Socket;
 
 public class MessageSocketThread extends Thread {
 
+    private final Logger logger = LogManager.getLogger(MessageSocketThread.class);
     private Socket socket;
     private MessageSocketThreadListener listener;
     private DataInputStream in;
@@ -25,9 +29,7 @@ public class MessageSocketThread extends Thread {
         try {
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
-            System.out.println("MessageSocketThread before listener.onSocketReady()");
             listener.onSockedReady(this);
-            System.out.println("MessageSocketThread after listener.onSocketReady()");
             while (!isInterrupted()) {
                 if (!isClosed) {
                     listener.onMessageReceived(this, in.readUTF());
@@ -35,7 +37,8 @@ public class MessageSocketThread extends Thread {
             }
         } catch (IOException e) {
             close();
-            System.out.println(e);
+//            System.out.println(e);
+            logger.error("Error: {}, {}", this.getName(), e.getMessage(), e);
         } finally {
             close();
         }
@@ -52,6 +55,7 @@ public class MessageSocketThread extends Thread {
         } catch (IOException e) {
             close();
             listener.onException(this, e);
+            logger.error("Error: {},{}", this.getName(), e.getMessage(), e);
         }
     }
 
@@ -65,11 +69,13 @@ public class MessageSocketThread extends Thread {
             in.close();
         } catch (IOException e) {
             listener.onException(this, e);
+            logger.error("Error: {},{}", this.getName(), e.getMessage(), e);
         }
         try {
             socket.close();
         } catch (IOException e) {
             e.printStackTrace();
+            logger.error("Error: {},{}", this.getName(), e.getMessage(), e);
         }
         listener.onSocketClosed(this);
     }

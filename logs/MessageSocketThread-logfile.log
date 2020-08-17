@@ -1,0 +1,11 @@
+2020-08-16 20:24:16,540 ERROR   --- [Client-login] ru.gb.net.MessageSocketThread            : Error: Client-login, Socket closed
+java.net.SocketException: Socket closed
+	at java.net.SocketInputStream.socketRead0(Native Method)
+	at java.net.SocketInputStream.socketRead(SocketInputStream.java:116)
+	at java.net.SocketInputStream.read(SocketInputStream.java:171)
+	at java.net.SocketInputStream.read(SocketInputStream.java:141)
+	at java.net.SocketInputStream.read(SocketInputStream.java:224)
+	at java.io.DataInputStream.readUnsignedShort(DataInputStream.java:337)
+	at java.io.DataInputStream.readUTF(DataInputStream.java:589)
+	at java.io.DataInputStream.readUTF(DataInputStream.java:564)
+	at ru.gb.net.MessageSocketThread.run(MessageSocketThread.java:35)
